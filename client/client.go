@@ -11,15 +11,18 @@ import (
 	"github.com/snail-plus/eth-pkg/secure"
 	"github.com/snail-plus/eth-pkg/tx"
 	"math/big"
+	"sync"
 )
+
+var once sync.Once
 
 var rpcClient *rpc.Client
 var err error
 
 var ethClient *ethclient.Client
 
-func init() {
-	rpcClient, err = rpc.Dial("https://bsc-dataseed.binance.org:443/")
+func initClient(nodeUrl string) {
+	rpcClient, err = rpc.Dial(nodeUrl)
 	if err != nil {
 		panic(err)
 	}
@@ -39,7 +42,10 @@ func SendTransaction(ctx context.Context, tx *types.Transaction) (string, error)
 	return result, err
 }
 
-func GetEthClient() *ethclient.Client {
+func GetEthClient(nodeUrl string) *ethclient.Client {
+	once.Do(func() {
+		initClient(nodeUrl)
+	})
 	return ethClient
 }
 
