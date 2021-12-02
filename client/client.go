@@ -14,7 +14,7 @@ import (
 
 type EthSession struct {
 	ethClient *ethclient.Client
-	c         *rpc.Client
+	rpcClient *rpc.Client
 }
 
 func NewEthSession(nodeUrl string) *EthSession {
@@ -26,8 +26,12 @@ func NewEthSession(nodeUrl string) *EthSession {
 
 	return &EthSession{
 		ethClient: ethclient.NewClient(rpcClient),
-		c:         rpcClient,
+		rpcClient: rpcClient,
 	}
+}
+
+func (e *EthSession) GetEthClient() *ethclient.Client {
+	return e.ethClient
 }
 
 func (e *EthSession) SendTransaction(ctx context.Context, tx *types.Transaction) (string, error) {
@@ -37,7 +41,7 @@ func (e *EthSession) SendTransaction(ctx context.Context, tx *types.Transaction)
 	}
 
 	var result string
-	err = e.c.CallContext(ctx, &result, "eth_sendRawTransaction", hexutil.Encode(data))
+	err = e.rpcClient.CallContext(ctx, &result, "eth_sendRawTransaction", hexutil.Encode(data))
 	return result, err
 }
 
