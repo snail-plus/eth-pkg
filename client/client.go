@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-	"fmt"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -11,86 +10,79 @@ import (
 	"github.com/snail-plus/eth-pkg/secure"
 	"github.com/snail-plus/eth-pkg/tx"
 	"math/big"
-	"sync"
 )
 
-var once sync.Once
+type EthSession struct {
+	ethClient *ethclient.Client
+	c         *rpc.Client
+}
 
-var rpcClient *rpc.Client
-var err error
+func NewEthSession(nodeUrl string) *EthSession {
 
-var ethClient *ethclient.Client
-
-func initClient(nodeUrl string) {
-	rpcClient, err = rpc.Dial(nodeUrl)
+	rpcClient, err := rpc.Dial(nodeUrl)
 	if err != nil {
 		panic(err)
 	}
 
-	ethClient = ethclient.NewClient(rpcClient)
-	fmt.Println("初始化client成功")
+	return &EthSession{
+		ethClient: ethclient.NewClient(rpcClient),
+		c:         rpcClient,
+	}
 }
 
-func SendTransaction(ctx context.Context, tx *types.Transaction) (string, error) {
+func (e *EthSession) SendTransaction(ctx context.Context, tx *types.Transaction) (string, error) {
 	data, err := tx.MarshalBinary()
 	if err != nil {
 		return "", err
 	}
 
 	var result string
-	err = rpcClient.CallContext(ctx, &result, "eth_sendRawTransaction", hexutil.Encode(data))
+	err = e.c.CallContext(ctx, &result, "eth_sendRawTransaction", hexutil.Encode(data))
 	return result, err
 }
 
-func GetEthClient(nodeUrl string) *ethclient.Client {
-	once.Do(func() {
-		initClient(nodeUrl)
-	})
-	return ethClient
+func (e *EthSession) GetGasPrice(ctx context.Context) (*big.Int, error) {
+	return e.ethClient.SuggestGasPrice(ctx)
 }
 
-func GetGasPrice(ctx context.Context) (*big.Int, error) {
-	return ethClient.SuggestGasPrice(ctx)
+func (e *EthSession) GetNonce(ctx context.Context, walletAddress string) (uint64, error) {
+	return e.ethClient.NonceAt(ctx, common.HexToAddress(walletAddress), nil)
 }
 
-func GetNonce(ctx context.Context, walletAddress string) (uint64, error) {
-	return ethClient.NonceAt(ctx, common.HexToAddress(walletAddress), nil)
+func (e *EthSession) NetworkID() (*big.Int, error) {
+	return e.ethClient.NetworkID(context.Background())
 }
 
-func NetworkID() (*big.Int, error) {
-	return ethClient.NetworkID(context.Background())
-}
-
-func GetSigner() types.Signer {
-	chainID, _ := NetworkID()
+func (e *EthSession) GetSigner() types.Signer {
+	chainID, _ := e.NetworkID()
 	signer := types.LatestSignerForChainID(chainID)
 	return signer
 }
 
-func TransactionByHash(ctx context.Context, hashStr string) (tx *types.Transaction, isPending bool, err error) {
+func (e *EthSession) TransactionByHash(ctx context.Context, hashStr string) (tx *types.Transaction, isPending bool, err error) {
 	hash := common.HexToHash(hashStr)
-	return ethClient.TransactionByHash(ctx, hash)
+	return e.ethClient.TransactionByHash(ctx, hash)
 }
 
-func SignNewTx(ctx context.Context, txInfo tx.TransactionInfo) (*types.Transaction, error) {
+func (e *EthSession) SignNewTx(ctx context.Context, txInfo tx.TransactionInfo) (*types.Transaction, error) {
 	key, err := secure.StringToPrivateKey(txInfo.PrivateKeyStr)
 	if err != nil {
 		return nil, err
 	}
 
-	nonce, err := GetNonce(ctx, txInfo.WalletAddress)
+	nonce, err := e.GetNonce(ctx, txInfo.WalletAddress)
 	if err != nil {
 		return nil, err
 	}
 
-	gasPrice, err := GetGasPrice(ctx)
+	gasPrice, err := e.GetGasPrice(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	toAddress := common.HexToAddress(txInfo.To)
 
-	tx, err := types.SignNewTx(key, GetSigner(), &types.LegacyTx{
+	tx, err := types.SignNewTx(key, e.GetSigner(), &types.LegacyTx{
 		Nonce:    nonce,
 		To:       &toAddress,
 		Value:    big.NewInt(0),
