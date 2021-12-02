@@ -12,29 +12,29 @@ import (
 	"math/big"
 )
 
-type EthSession struct {
+type Web3Client struct {
 	ethClient *ethclient.Client
 	rpcClient *rpc.Client
 }
 
-func NewEthSession(nodeUrl string) *EthSession {
+func NewWeb3Client(nodeUrl string) *Web3Client {
 
 	rpcClient, err := rpc.Dial(nodeUrl)
 	if err != nil {
 		panic(err)
 	}
 
-	return &EthSession{
+	return &Web3Client{
 		ethClient: ethclient.NewClient(rpcClient),
 		rpcClient: rpcClient,
 	}
 }
 
-func (e *EthSession) GetEthClient() *ethclient.Client {
+func (e *Web3Client) GetEthClient() *ethclient.Client {
 	return e.ethClient
 }
 
-func (e *EthSession) SendTransaction(ctx context.Context, tx *types.Transaction) (string, error) {
+func (e *Web3Client) SendTransaction(ctx context.Context, tx *types.Transaction) (string, error) {
 	data, err := tx.MarshalBinary()
 	if err != nil {
 		return "", err
@@ -45,30 +45,30 @@ func (e *EthSession) SendTransaction(ctx context.Context, tx *types.Transaction)
 	return result, err
 }
 
-func (e *EthSession) GetGasPrice(ctx context.Context) (*big.Int, error) {
+func (e *Web3Client) GetGasPrice(ctx context.Context) (*big.Int, error) {
 	return e.ethClient.SuggestGasPrice(ctx)
 }
 
-func (e *EthSession) GetNonce(ctx context.Context, walletAddress string) (uint64, error) {
+func (e *Web3Client) GetNonce(ctx context.Context, walletAddress string) (uint64, error) {
 	return e.ethClient.NonceAt(ctx, common.HexToAddress(walletAddress), nil)
 }
 
-func (e *EthSession) NetworkID() (*big.Int, error) {
+func (e *Web3Client) NetworkID() (*big.Int, error) {
 	return e.ethClient.NetworkID(context.Background())
 }
 
-func (e *EthSession) GetSigner() types.Signer {
+func (e *Web3Client) GetSigner() types.Signer {
 	chainID, _ := e.NetworkID()
 	signer := types.LatestSignerForChainID(chainID)
 	return signer
 }
 
-func (e *EthSession) TransactionByHash(ctx context.Context, hashStr string) (tx *types.Transaction, isPending bool, err error) {
+func (e *Web3Client) TransactionByHash(ctx context.Context, hashStr string) (tx *types.Transaction, isPending bool, err error) {
 	hash := common.HexToHash(hashStr)
 	return e.ethClient.TransactionByHash(ctx, hash)
 }
 
-func (e *EthSession) SignNewTx(ctx context.Context, txInfo tx.TransactionInfo) (*types.Transaction, error) {
+func (e *Web3Client) SignNewTx(ctx context.Context, txInfo tx.TransactionInfo) (*types.Transaction, error) {
 	key, err := secure.StringToPrivateKey(txInfo.PrivateKeyStr)
 	if err != nil {
 		return nil, err
