@@ -2,7 +2,6 @@ package tx
 
 import (
 	"context"
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/snail-plus/eth-pkg/client"
 	"math/big"
 	"sync"
@@ -10,8 +9,8 @@ import (
 
 type TransactionManager interface {
 	// 返回hash
-	ExecuteTransaction(to string, data string, value *big.Int, gasPrice *big.Int, gasLimit *big.Int) (string, error)
-	GetNonce(ctx context.Context, account common.Address)
+	ExecuteTransaction(to string, data string, value *big.Int, gasPrice *big.Int, gasLimit uint64) (string, error)
+	GetNonce(ctx context.Context, account string) uint64
 }
 
 type FastRawTransactionManager struct {
@@ -25,7 +24,7 @@ type FastRawTransactionManager struct {
 func (f FastRawTransactionManager) ExecuteTransaction(to string, data string, value *big.Int,
 	gasPrice *big.Int, gasLimit uint64) (string, error) {
 	ctx := context.Background()
-	nonce := f.GetNonce(ctx)
+	nonce := f.GetNonce(ctx, f.walletAddress)
 
 	txInfo := TransactionInfo{
 		To:            to,
@@ -45,12 +44,12 @@ func (f FastRawTransactionManager) ExecuteTransaction(to string, data string, va
 
 }
 
-func (f FastRawTransactionManager) GetNonce(ctx context.Context) uint64 {
+func (f FastRawTransactionManager) GetNonce(ctx context.Context, account string) uint64 {
 	f.mutex.Lock()
 	defer f.mutex.Unlock()
 
 	if f.nonce == 0 {
-		nonce, err := f.web3Client.GetNonce(ctx, f.walletAddress)
+		nonce, err := f.web3Client.GetNonce(ctx, account)
 		if err != nil {
 			return 1
 		}
