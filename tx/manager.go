@@ -9,7 +9,7 @@ import (
 
 type TransactionManager interface {
 	// 返回hash
-	ExecuteTransaction(to string, data string, value *big.Int, gasPrice *big.Int, gasLimit uint64) (string, error)
+	ExecuteTransaction(to string, data []byte, value *big.Int, gasPrice *big.Int, gasLimit uint64) (string, error)
 	GetNonce(ctx context.Context, account string) uint64
 }
 
@@ -32,14 +32,14 @@ func NewDefaultTransactionManager(web3Client *client.Web3Client,
 	}
 }
 
-func (f FastRawTransactionManager) ExecuteTransaction(to string, data string, value *big.Int,
+func (f FastRawTransactionManager) ExecuteTransaction(to string, data []byte, value *big.Int,
 	gasPrice *big.Int, gasLimit uint64) (string, error) {
 	ctx := context.Background()
 	nonce := f.GetNonce(ctx, f.walletAddress)
 
 	txInfo := TransactionInfo{
 		To:            to,
-		Data:          []byte(data),
+		Data:          data,
 		WalletAddress: f.walletAddress,
 		PrivateKeyStr: f.privateKeyStr,
 		Value:         value,
