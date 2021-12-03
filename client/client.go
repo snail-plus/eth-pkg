@@ -15,6 +15,7 @@ import (
 type Web3Client struct {
 	ethClient *ethclient.Client
 	rpcClient *rpc.Client
+	chainId   *big.Int
 }
 
 func NewWeb3Client(nodeUrl string) *Web3Client {
@@ -24,9 +25,16 @@ func NewWeb3Client(nodeUrl string) *Web3Client {
 		panic(err)
 	}
 
+	ethClient := ethclient.NewClient(rpcClient)
+	networkID, err := ethClient.NetworkID(context.Background())
+	if err != nil {
+		panic(err)
+	}
+
 	return &Web3Client{
-		ethClient: ethclient.NewClient(rpcClient),
+		ethClient: ethClient,
 		rpcClient: rpcClient,
+		chainId:   networkID,
 	}
 }
 
@@ -58,8 +66,7 @@ func (e *Web3Client) NetworkID() (*big.Int, error) {
 }
 
 func (e *Web3Client) GetSigner() types.Signer {
-	chainID, _ := e.NetworkID()
-	signer := types.LatestSignerForChainID(chainID)
+	signer := types.LatestSignerForChainID(e.chainId)
 	return signer
 }
 
@@ -91,6 +98,27 @@ func (e *Web3Client) SignNewTx(ctx context.Context, txInfo tx.TransactionInfo) (
 		To:       &toAddress,
 		Value:    big.NewInt(0),
 		Gas:      600000,
+		GasPrice: gasPrice,
+		Data:     txInfo.Data,
+	})
+
+	return tx, err
+}
+
+func (e *Web3Client) SignNewTxInfo(txInfo tx.TransactionInfo,
+	nonce uint64, gasPrice *big.Int, gas uint64) (*types.Transaction, error) {
+	key, err := secure.StringToPrivateKey(txInfo.PrivateKeyStr)
+	if err != nil {
+		return nil, err
+	}
+
+	toAddress := common.HexToAddress(txInfo.To)
+
+	tx, err := types.SignNewTx(key, e.GetSigner(), &types.LegacyTx{
+		Nonce:    nonce,
+		To:       &toAddress,
+		Value:    txInfo.Value,
+		Gas:      gas,
 		GasPrice: gasPrice,
 		Data:     txInfo.Data,
 	})
