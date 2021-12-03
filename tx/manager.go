@@ -21,6 +21,17 @@ type FastRawTransactionManager struct {
 	privateKeyStr string
 }
 
+func NewDefaultTransactionManager(web3Client *client.Web3Client,
+	walletAddress string, privateKeyStr string) TransactionManager {
+	return FastRawTransactionManager{
+		nonce:         0,
+		mutex:         sync.Mutex{},
+		web3Client:    web3Client,
+		walletAddress: walletAddress,
+		privateKeyStr: privateKeyStr,
+	}
+}
+
 func (f FastRawTransactionManager) ExecuteTransaction(to string, data string, value *big.Int,
 	gasPrice *big.Int, gasLimit uint64) (string, error) {
 	ctx := context.Background()
