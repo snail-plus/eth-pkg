@@ -2,7 +2,6 @@ package tx
 
 import (
 	"context"
-	"github.com/snail-plus/eth-pkg/client"
 	"math/big"
 	"sync"
 )
@@ -16,12 +15,12 @@ type TransactionManager interface {
 type FastRawTransactionManager struct {
 	nonce         uint64
 	mutex         sync.Mutex
-	web3Client    *client.Web3Client
+	web3Client    *Web3Client
 	walletAddress string
 	privateKeyStr string
 }
 
-func NewDefaultTransactionManager(web3Client *client.Web3Client,
+func NewDefaultTransactionManager(web3Client *Web3Client,
 	walletAddress string, privateKeyStr string) TransactionManager {
 	return FastRawTransactionManager{
 		nonce:         0,

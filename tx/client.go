@@ -1,4 +1,4 @@
-package client
+package tx
 
 import (
 	"context"
@@ -8,7 +8,6 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/snail-plus/eth-pkg/secure"
-	"github.com/snail-plus/eth-pkg/tx"
 	"math/big"
 )
 
@@ -75,7 +74,7 @@ func (e *Web3Client) TransactionByHash(ctx context.Context, hashStr string) (tx 
 	return e.ethClient.TransactionByHash(ctx, hash)
 }
 
-func (e *Web3Client) SignNewTx(ctx context.Context, txInfo tx.TransactionInfo) (*types.Transaction, error) {
+func (e *Web3Client) SignNewTx(ctx context.Context, txInfo TransactionInfo) (*types.Transaction, error) {
 	key, err := secure.StringToPrivateKey(txInfo.PrivateKeyStr)
 	if err != nil {
 		return nil, err
@@ -105,7 +104,7 @@ func (e *Web3Client) SignNewTx(ctx context.Context, txInfo tx.TransactionInfo) (
 	return tx, err
 }
 
-func (e *Web3Client) SignNewTxInfo(txInfo tx.TransactionInfo,
+func (e *Web3Client) SignNewTxInfo(txInfo TransactionInfo,
 	nonce uint64, gasPrice *big.Int, gas uint64) (*types.Transaction, error) {
 	key, err := secure.StringToPrivateKey(txInfo.PrivateKeyStr)
 	if err != nil {
