@@ -124,7 +124,7 @@ func NewLogFilterFilter(rpcClient *rpc.Client, filterQuery ethereum.FilterQuery)
 		Filter:      l,
 		FilterQuery: filterQuery,
 		rpcClient:   rpcClient,
-		LogChan:     make(chan interface{}, 500),
+		LogChan:     make(chan interface{}, 5000),
 	}
 	return l
 }
