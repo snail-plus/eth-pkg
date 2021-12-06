@@ -58,7 +58,7 @@ func (e *Web3Client) GetGasPrice(ctx context.Context) (*big.Int, error) {
 }
 
 func (e *Web3Client) GetNonce(ctx context.Context, walletAddress string) (uint64, error) {
-	return e.ethClient.NonceAt(ctx, common.HexToAddress(walletAddress), nil)
+	return e.ethClient.NonceAt(ctx, common.HexToAddress(walletAddress), big.NewInt(-1))
 }
 
 func (e *Web3Client) NetworkID() (*big.Int, error) {
@@ -138,7 +138,7 @@ func (e *Web3Client) NewLogFilter(filterQuery ethereum.FilterQuery) (string, err
 	return filterID, err
 }
 
-// pending Filter 时返回 数组hash 获取LOG 时候返回Log对象
+// pending Filter 时返回 数组hash 获取LOG 时候返回Log对象  nil means latest block -1 pending
 func (e *Web3Client) EthLogFlowable(filterQuery ethereum.FilterQuery, pullInterval int64) chan interface{} {
 
 	filter := NewLogFilterFilter(e.rpcClient, filterQuery)
