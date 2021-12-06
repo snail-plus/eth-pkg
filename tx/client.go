@@ -2,6 +2,7 @@ package tx
 
 import (
 	"context"
+	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -123,4 +124,26 @@ func (e *Web3Client) SignNewTxInfo(txInfo TransactionInfo,
 	})
 
 	return tx, err
+}
+
+func (e *Web3Client) NewPendingTransactionFilter() (string, error) {
+	pendingTransactionFilter := NewPendingTransactionFilter(e.rpcClient)
+	filterID, err := pendingTransactionFilter.GetFilterId()
+	return filterID, err
+}
+
+func (e *Web3Client) NewLogFilter(filterQuery ethereum.FilterQuery) (string, error) {
+	filter := NewLogFilterFilter(e.rpcClient, filterQuery)
+	filterID, err := filter.GetFilterId()
+	return filterID, err
+}
+
+// pending Filter 时返回 数组hash 获取LOG 时候返回Log对象
+func (e *Web3Client) EthLogFlowable(filterQuery ethereum.FilterQuery, pullInterval int64) chan interface{} {
+
+	filter := NewLogFilterFilter(e.rpcClient, filterQuery)
+	filter.Run(pullInterval)
+
+	logChan := filter.LogChan
+	return logChan
 }
