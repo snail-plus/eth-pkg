@@ -2,7 +2,6 @@ package tx
 
 import (
 	"context"
-	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -132,14 +131,14 @@ func (e *Web3Client) NewPendingTransactionFilter() (string, error) {
 	return filterID, err
 }
 
-func (e *Web3Client) NewLogFilter(filterQuery ethereum.FilterQuery) (string, error) {
+func (e *Web3Client) NewLogFilter(filterQuery FilterQuery) (string, error) {
 	filter := NewLogFilterFilter(e.rpcClient, filterQuery)
 	filterID, err := filter.GetFilterId()
 	return filterID, err
 }
 
-// pending Filter 时返回 数组hash 获取LOG 时候返回Log对象  nil means latest block -1 pending
-func (e *Web3Client) EthLogFlowable(filterQuery ethereum.FilterQuery, pullInterval int64) chan interface{} {
+// pending Filter 时返回 数组hash 获取LOG 时候返回Log对象  0 or nil means latest block -1 pending
+func (e *Web3Client) EthLogFlowable(filterQuery FilterQuery, pullInterval int64) chan interface{} {
 
 	filter := NewLogFilterFilter(e.rpcClient, filterQuery)
 	filter.Run(pullInterval)
