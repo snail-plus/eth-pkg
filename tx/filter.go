@@ -1,10 +1,10 @@
 package tx
 
 import (
-	"fmt"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/rpc"
+	"log"
 	"reflect"
 	"strings"
 	"time"
@@ -52,7 +52,7 @@ func (b BaseFilter) Run(pullInterval int64) {
 	b.pullInterval = pullInterval
 	filterId, err := b.Filter.GetFilterId()
 	if err != nil {
-		fmt.Println(err.Error())
+		log.Printf("get filterId error: %s", err.Error())
 		return
 	}
 
@@ -87,6 +87,7 @@ func (b BaseFilter) Run(pullInterval int64) {
 			}
 
 			if err != nil {
+				log.Printf("eth_getFilterChanges error: %s", err.Error())
 				if strings.Contains(err.Error(), notFoundErrorStr) {
 					return
 				}
