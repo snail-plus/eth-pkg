@@ -49,12 +49,6 @@ type BaseFilter struct {
 }
 
 func (b BaseFilter) Run(pullInterval int64) {
-	b.pullInterval = pullInterval
-	filterId, err := b.Filter.GetFilterId()
-	if err != nil {
-		log.Printf("get filterId error: %s", err.Error())
-		return
-	}
 
 	go func() {
 		ticker := time.NewTicker(time.Duration(pullInterval) * time.Millisecond)
@@ -67,6 +61,13 @@ func (b BaseFilter) Run(pullInterval int64) {
 			ticker.Stop()
 			b.ReInstall()
 		}()
+
+		b.pullInterval = pullInterval
+		filterId, err := b.Filter.GetFilterId()
+		if err != nil {
+			log.Printf("get filterId error: %s", err.Error())
+			return
+		}
 
 		for range ticker.C {
 			var err error
