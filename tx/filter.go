@@ -59,6 +59,11 @@ func (b BaseFilter) Run(pullInterval int64) {
 	go func() {
 		ticker := time.NewTicker(time.Duration(pullInterval) * time.Millisecond)
 		defer func() {
+			defer func() {
+				if r := recover(); r != nil {
+					log.Printf("Run error: %v", r)
+				}
+			}()
 			ticker.Stop()
 			b.ReInstall()
 		}()
