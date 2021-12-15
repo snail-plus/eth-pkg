@@ -22,7 +22,7 @@ type FastRawTransactionManager struct {
 
 func NewDefaultTransactionManager(web3Client *Web3Client,
 	walletAddress string, privateKeyStr string) TransactionManager {
-	return FastRawTransactionManager{
+	return &FastRawTransactionManager{
 		nonce:         0,
 		mutex:         sync.Mutex{},
 		web3Client:    web3Client,
@@ -31,7 +31,7 @@ func NewDefaultTransactionManager(web3Client *Web3Client,
 	}
 }
 
-func (f FastRawTransactionManager) ExecuteTransaction(to string, data []byte, value *big.Int,
+func (f *FastRawTransactionManager) ExecuteTransaction(to string, data []byte, value *big.Int,
 	gasPrice *big.Int, gasLimit uint64) (string, error) {
 	ctx := context.Background()
 	nonce := f.GetNonce(ctx, f.walletAddress)
@@ -54,7 +54,7 @@ func (f FastRawTransactionManager) ExecuteTransaction(to string, data []byte, va
 
 }
 
-func (f FastRawTransactionManager) GetNonce(ctx context.Context, account string) uint64 {
+func (f *FastRawTransactionManager) GetNonce(ctx context.Context, account string) uint64 {
 	f.mutex.Lock()
 	defer f.mutex.Unlock()
 
