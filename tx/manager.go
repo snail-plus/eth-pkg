@@ -39,7 +39,6 @@ func (f *FastRawTransactionManager) ExecuteTransaction(to string, data []byte, v
 	txInfo := TransactionInfo{
 		To:            to,
 		Data:          data,
-		WalletAddress: f.walletAddress,
 		PrivateKeyStr: f.privateKeyStr,
 		Value:         value,
 	}
