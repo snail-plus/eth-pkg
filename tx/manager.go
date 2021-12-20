@@ -2,6 +2,7 @@ package tx
 
 import (
 	"context"
+	"github.com/snail-plus/eth-pkg/secure"
 	"math/big"
 	"sync"
 )
@@ -16,17 +17,15 @@ type FastRawTransactionManager struct {
 	nonce         uint64
 	mutex         sync.Mutex
 	web3Client    *Web3Client
-	walletAddress string
 	privateKeyStr string
 }
 
 func NewDefaultTransactionManager(web3Client *Web3Client,
-	walletAddress string, privateKeyStr string) TransactionManager {
+	privateKeyStr string) TransactionManager {
 	return &FastRawTransactionManager{
 		nonce:         0,
 		mutex:         sync.Mutex{},
 		web3Client:    web3Client,
-		walletAddress: walletAddress,
 		privateKeyStr: privateKeyStr,
 	}
 }
@@ -34,7 +33,12 @@ func NewDefaultTransactionManager(web3Client *Web3Client,
 func (f *FastRawTransactionManager) ExecuteTransaction(to string, data []byte, value *big.Int,
 	gasPrice *big.Int, gasLimit uint64) (string, error) {
 	ctx := context.Background()
-	nonce := f.GetNonce(ctx, f.walletAddress)
+	addressStr, err := secure.PrivateKeyToAddressStr(f.privateKeyStr)
+	if err != nil {
+		return "", err
+	}
+
+	nonce := f.GetNonce(ctx, addressStr)
 
 	txInfo := TransactionInfo{
 		To:            to,
