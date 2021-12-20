@@ -5,6 +5,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/snail-plus/eth-pkg/secure"
@@ -80,7 +81,8 @@ func (e *Web3Client) SignNewTx(ctx context.Context, txInfo TransactionInfo) (*ty
 		return nil, err
 	}
 
-	nonce, err := e.GetNonce(ctx, txInfo.WalletAddress)
+	walletAddress := crypto.PubkeyToAddress(key.PublicKey)
+	nonce, err := e.GetNonce(ctx, walletAddress.String())
 	if err != nil {
 		return nil, err
 	}
