@@ -148,3 +148,13 @@ func (e *Web3Client) EthLogFlowable(filterQuery FilterQuery, pullInterval int64)
 	logChan := filter.LogChan
 	return logChan
 }
+
+// pending Filter 时返回 数组hash 获取LOG 时候返回Log对象  0 or nil means latest block -1 pending
+func (e *Web3Client) EthPendingFlowable(pullInterval int64) chan interface{} {
+
+	filter := NewPendingTransactionFilter(e.rpcClient)
+	filter.Run(pullInterval)
+
+	logChan := filter.LogChan
+	return logChan
+}
