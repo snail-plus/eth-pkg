@@ -3,9 +3,7 @@ package secure
 import (
 	"crypto/md5"
 	"encoding/hex"
-	"fmt"
-	"io"
-	"os"
+	"io/ioutil"
 )
 
 func GetMd5String(inputStr string) string {
@@ -15,20 +13,11 @@ func GetMd5String(inputStr string) string {
 	return hex.EncodeToString(cipherStr)
 }
 
-func GetFileMd5String(filePath string) (result string) {
-	f, err := os.Open(filePath)
+func GetFileMd5String(filePath string) (string, error) {
+	content, err := ioutil.ReadFile(filePath)
 	if err != nil {
-		fmt.Println("Open", err)
-		return
+		return "", err
 	}
 
-	defer f.Close()
-
-	md5hash := md5.New()
-	if _, err := io.Copy(md5hash, f); err != nil {
-		fmt.Println("Copy", err)
-		return
-	}
-
-	return fmt.Sprintf("%x", md5hash.Sum(nil))
+	return GetMd5String(string(content)), nil
 }
