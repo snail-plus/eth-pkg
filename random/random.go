@@ -15,3 +15,9 @@ func GetRandomString(count int) string {
 	}
 	return string(result)
 }
+
+// pseudo-random number in [min,max)
+func RandInt(min int, max int) int64 {
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	return int64(min + r.Intn(max-min))
+}
