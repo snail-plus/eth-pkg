@@ -6,18 +6,18 @@ import (
 	"io/ioutil"
 )
 
-func GetMd5String(inputStr string) string {
+func GetMd5Str(inputStr string) string {
 	h := md5.New()
 	h.Write([]byte(inputStr))
 	cipherStr := h.Sum(nil)
 	return hex.EncodeToString(cipherStr)
 }
 
-func GetFileMd5String(filePath string) (string, error) {
+func GetFileMd5Str(filePath string) (string, error) {
 	content, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		return "", err
 	}
 
-	return GetMd5String(string(content)), nil
+	return GetMd5Str(string(content)), nil
 }
