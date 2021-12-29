@@ -7,6 +7,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/ethereum/go-ethereum/ethclient/gethclient"
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/snail-plus/eth-pkg/secure"
 	"math/big"
@@ -16,6 +17,7 @@ type Web3Client struct {
 	ethClient *ethclient.Client
 	rpcClient *rpc.Client
 	chainId   *big.Int
+	gethClient *gethclient.Client
 }
 
 func NewWeb3Client(nodeUrl string) *Web3Client {
@@ -35,11 +37,16 @@ func NewWeb3Client(nodeUrl string) *Web3Client {
 		ethClient: ethClient,
 		rpcClient: rpcClient,
 		chainId:   networkID,
+		gethClient: gethclient.New(rpcClient),
 	}
 }
 
 func (e *Web3Client) GetEthClient() *ethclient.Client {
 	return e.ethClient
+}
+
+func (e *Web3Client) GetGEthClient() *gethclient.Client {
+	return e.gethClient
 }
 
 func (e *Web3Client) SendTransaction(ctx context.Context, tx *types.Transaction) (string, error) {
