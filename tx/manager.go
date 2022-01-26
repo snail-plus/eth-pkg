@@ -58,7 +58,7 @@ func (f *FastRawTransactionManager) ExecuteTransaction(to string, data []byte, v
 	}
 
 	txHash, err := f.web3Client.SendTransaction(ctx, signTx)
-	if err != nil && strings.Contains(err.Error(), "nonce too low") {
+	if err != nil && strings.Contains(err.Error(), "nonce too") {
 		// nonce too low refresh
 		f.GetNonce(ctx, addressStr, true)
 	}
