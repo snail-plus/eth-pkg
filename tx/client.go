@@ -12,6 +12,7 @@ import (
 	"github.com/snail-plus/eth-pkg/secure"
 	"github.com/snail-plus/goutil/maputil"
 	"math/big"
+	"strings"
 )
 
 type Web3Client struct {
@@ -181,7 +182,7 @@ func (e *Web3Client) TxPoolContent(ctx context.Context) (map[string]map[string]m
 	return result, nil
 }
 
-func (e *Web3Client) TxPoolContentPending(ctx context.Context) ([]*RPCTransaction, error) {
+func (e *Web3Client) TxPoolContentPending(ctx context.Context, filter func(toAddress string) bool) ([]*RPCTransaction, error) {
 	var result map[string]map[string]map[string]*RPCTransaction
 	err := e.rpcClient.CallContext(ctx, &result, "txpool_content")
 	if err != nil {
@@ -197,7 +198,11 @@ func (e *Web3Client) TxPoolContentPending(ctx context.Context) ([]*RPCTransactio
 		txArr := maputil.Values(txMap)
 		for _, txItem := range txArr {
 			pendingTx := txItem.(*RPCTransaction)
-			pendingTxArr = append(pendingTxArr, pendingTx)
+			if filter != nil && filter(strings.ToLower(pendingTx.To.String())) {
+				pendingTxArr = append(pendingTxArr, pendingTx)
+			} else {
+				pendingTxArr = append(pendingTxArr, pendingTx)
+			}
 		}
 	}
 
