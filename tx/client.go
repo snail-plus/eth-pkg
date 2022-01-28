@@ -189,13 +189,10 @@ func (e *Web3Client) TxPoolContentPending(ctx context.Context, filter func(toAdd
 		return nil, err
 	}
 
-	var allTxArr []map[string]map[string]*RPCTransaction
 	pending := result["pending"]
-	queued := result["queued"]
-	allTxArr = append(allTxArr, pending, queued)
 
 	var pendingTxArr []*RPCTransaction
-	values := maputil.Values(allTxArr)
+	values := maputil.Values(pending)
 	for _, v := range values {
 		txMap := v.(map[string]*RPCTransaction)
 		txArr := maputil.Values(txMap)
