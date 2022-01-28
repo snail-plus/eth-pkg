@@ -166,11 +166,11 @@ func (e *Web3Client) EthPendingFlowable(pullInterval int64) chan interface{} {
 	return logChan
 }
 
-func (e *Web3Client) TxPoolContent(ctx context.Context) (string, error) {
-	var result string
+func (e *Web3Client) TxPoolContent(ctx context.Context) (map[string]map[string]map[string]*RPCTransaction, error) {
+	var result map[string]map[string]map[string]*RPCTransaction
 	err := e.rpcClient.CallContext(ctx, &result, "txpool_content")
 	if err != nil {
-		return "", err
+		return result, err
 	}
 
 	return result, nil
