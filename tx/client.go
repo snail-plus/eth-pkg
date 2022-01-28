@@ -10,6 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient/gethclient"
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/snail-plus/eth-pkg/secure"
+	"github.com/snail-plus/goutil/maputil"
 	"math/big"
 )
 
@@ -166,6 +167,10 @@ func (e *Web3Client) EthPendingFlowable(pullInterval int64) chan interface{} {
 	return logChan
 }
 
+// content := map[string]map[string]map[string]*RPCTransaction{
+//		"pending": make(map[string]map[string]*RPCTransaction),
+//		"queued":  make(map[string]map[string]*RPCTransaction),
+//	}
 func (e *Web3Client) TxPoolContent(ctx context.Context) (map[string]map[string]map[string]*RPCTransaction, error) {
 	var result map[string]map[string]map[string]*RPCTransaction
 	err := e.rpcClient.CallContext(ctx, &result, "txpool_content")
@@ -174,4 +179,27 @@ func (e *Web3Client) TxPoolContent(ctx context.Context) (map[string]map[string]m
 	}
 
 	return result, nil
+}
+
+func (e *Web3Client) TxPoolContentPending(ctx context.Context) ([]*RPCTransaction, error) {
+	var result map[string]map[string]map[string]*RPCTransaction
+	err := e.rpcClient.CallContext(ctx, &result, "txpool_content")
+	if err != nil {
+		return nil, err
+	}
+
+	pending := result["pending"]
+
+	var pendingTxArr []*RPCTransaction
+	values := maputil.Values(pending)
+	for _, v := range values {
+		txMap := v.(map[string]*RPCTransaction)
+		txArr := maputil.Values(txMap)
+		for _, txItem := range txArr {
+			pendingTx := txItem.(*RPCTransaction)
+			pendingTxArr = append(pendingTxArr, pendingTx)
+		}
+	}
+
+	return pendingTxArr, nil
 }
