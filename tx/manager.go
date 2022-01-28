@@ -7,6 +7,7 @@ import (
 	"math/big"
 	"strings"
 	"sync"
+	"time"
 )
 
 type TransactionManager interface {
@@ -16,10 +17,11 @@ type TransactionManager interface {
 }
 
 type FastRawTransactionManager struct {
-	nonce         uint64
-	mutex         sync.Mutex
-	web3Client    *Web3Client
-	privateKeyStr string
+	nonce            uint64
+	refreshNonceTime int64
+	mutex            sync.Mutex
+	web3Client       *Web3Client
+	privateKeyStr    string
 }
 
 func NewDefaultTransactionManager(web3Client *Web3Client,
@@ -71,6 +73,10 @@ func (f *FastRawTransactionManager) GetNonce(ctx context.Context, account string
 	f.mutex.Lock()
 	defer f.mutex.Unlock()
 
+	if time.Now().Unix()-f.refreshNonceTime >= 60 {
+		refresh = true
+	}
+
 	if f.nonce == 0 || refresh {
 		nonce, err := f.web3Client.GetNonce(ctx, account)
 		if err != nil {
@@ -78,6 +84,7 @@ func (f *FastRawTransactionManager) GetNonce(ctx context.Context, account string
 		}
 		log.Printf("address: %s, nonce: %d", account, nonce)
 		f.nonce = nonce
+		f.refreshNonceTime = time.Now().Unix()
 	} else {
 		f.nonce = f.nonce + 1
 	}
