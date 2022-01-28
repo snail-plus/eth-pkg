@@ -198,11 +198,16 @@ func (e *Web3Client) TxPoolContentPending(ctx context.Context, filter func(toAdd
 		txArr := maputil.Values(txMap)
 		for _, txItem := range txArr {
 			pendingTx := txItem.(*RPCTransaction)
-			if filter != nil && filter(strings.ToLower(pendingTx.To.String())) {
+
+			if filter == nil {
 				pendingTxArr = append(pendingTxArr, pendingTx)
-			} else {
+				continue
+			}
+
+			if filter(strings.ToLower(pendingTx.To.String())) {
 				pendingTxArr = append(pendingTxArr, pendingTx)
 			}
+
 		}
 	}
 
