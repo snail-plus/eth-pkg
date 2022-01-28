@@ -14,9 +14,9 @@ import (
 )
 
 type Web3Client struct {
-	ethClient *ethclient.Client
-	rpcClient *rpc.Client
-	chainId   *big.Int
+	ethClient  *ethclient.Client
+	rpcClient  *rpc.Client
+	chainId    *big.Int
 	gethClient *gethclient.Client
 }
 
@@ -34,9 +34,9 @@ func NewWeb3Client(nodeUrl string) *Web3Client {
 	}
 
 	return &Web3Client{
-		ethClient: ethClient,
-		rpcClient: rpcClient,
-		chainId:   networkID,
+		ethClient:  ethClient,
+		rpcClient:  rpcClient,
+		chainId:    networkID,
 		gethClient: gethclient.New(rpcClient),
 	}
 }
@@ -164,4 +164,14 @@ func (e *Web3Client) EthPendingFlowable(pullInterval int64) chan interface{} {
 
 	logChan := filter.LogChan
 	return logChan
+}
+
+func (e *Web3Client) TxPoolContent(ctx context.Context) (string, error) {
+	var result string
+	err := e.rpcClient.CallContext(ctx, &result, "txpool_content")
+	if err != nil {
+		return "", err
+	}
+
+	return result, nil
 }
