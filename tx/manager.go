@@ -19,7 +19,7 @@ type TransactionManager interface {
 type FastRawTransactionManager struct {
 	nonce            uint64
 	refreshNonceTime int64
-	mutex            sync.Mutex
+	mutex            *sync.Mutex
 	web3Client       *Web3Client
 	privateKeyStr    string
 }
@@ -28,7 +28,7 @@ func NewDefaultTransactionManager(web3Client *Web3Client,
 	privateKeyStr string) TransactionManager {
 	return &FastRawTransactionManager{
 		nonce:         0,
-		mutex:         sync.Mutex{},
+		mutex:         new(sync.Mutex),
 		web3Client:    web3Client,
 		privateKeyStr: privateKeyStr,
 	}
