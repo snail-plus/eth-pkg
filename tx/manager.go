@@ -73,6 +73,7 @@ func (f *FastRawTransactionManager) GetNonce(ctx context.Context, account string
 	f.mutex.Lock()
 	defer f.mutex.Unlock()
 
+	// 注意 交易在交易池 中 节点nonce 不会增加(执行后记录当前nonce) 这里需要客户端自己计算 然后定时更新nonce
 	if time.Now().Unix()-f.refreshNonceTime >= 60 {
 		refresh = true
 	}
