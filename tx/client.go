@@ -101,11 +101,15 @@ func (e *Web3Client) SignNewTx(ctx context.Context, txInfo TransactionInfo) (*ty
 		return nil, err
 	}
 
-	toAddress := common.HexToAddress(txInfo.To)
+	var toAddress *common.Address
+	if txInfo.To != "" {
+		tmpToAddress := common.HexToAddress(txInfo.To)
+		toAddress = &tmpToAddress
+	}
 
 	tx, err := types.SignNewTx(key, e.GetSigner(), &types.LegacyTx{
 		Nonce:    nonce,
-		To:       &toAddress,
+		To:       toAddress,
 		Value:    big.NewInt(0),
 		Gas:      600000,
 		GasPrice: gasPrice,
@@ -122,11 +126,15 @@ func (e *Web3Client) SignNewTxInfo(txInfo TransactionInfo,
 		return nil, err
 	}
 
-	toAddress := common.HexToAddress(txInfo.To)
+	var toAddress *common.Address
+	if txInfo.To != "" {
+		tmpToAddress := common.HexToAddress(txInfo.To)
+		toAddress = &tmpToAddress
+	}
 
 	tx, err := types.SignNewTx(key, e.GetSigner(), &types.LegacyTx{
 		Nonce:    nonce,
-		To:       &toAddress,
+		To:       toAddress,
 		Value:    txInfo.Value,
 		Gas:      gas,
 		GasPrice: gasPrice,
