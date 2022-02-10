@@ -198,26 +198,42 @@ func (e *Web3Client) TxPoolContentPending(ctx context.Context, filter func(toAdd
 	}
 
 	pending := result["pending"]
+	queued := result["queued"]
 
-	var pendingTxArr []*RPCTransaction
-	values := maputil.Values(pending)
-	for _, v := range values {
-		txMap := v.(map[string]*RPCTransaction)
-		txArr := maputil.Values(txMap)
-		for _, txItem := range txArr {
-			pendingTx := txItem.(*RPCTransaction)
+	var fullTxArr []*RPCTransaction
 
-			if filter == nil {
-				pendingTxArr = append(pendingTxArr, pendingTx)
-				continue
+	flatTx := func(txMap map[string]map[string]*RPCTransaction) []*RPCTransaction {
+		values := maputil.Values(txMap)
+		var pendingTxArr []*RPCTransaction
+
+		for _, v := range values {
+			txMap := v.(map[string]*RPCTransaction)
+			txArr := maputil.Values(txMap)
+			for _, txItem := range txArr {
+				pendingTx := txItem.(*RPCTransaction)
+
+				if filter == nil {
+					pendingTxArr = append(pendingTxArr, pendingTx)
+					continue
+				}
+
+				if filter(strings.ToLower(pendingTx.To.String())) {
+					pendingTxArr = append(pendingTxArr, pendingTx)
+				}
+
 			}
-
-			if filter(strings.ToLower(pendingTx.To.String())) {
-				pendingTxArr = append(pendingTxArr, pendingTx)
-			}
-
 		}
+
+		return pendingTxArr
 	}
 
-	return pendingTxArr, nil
+	for _, item := range flatTx(pending) {
+		fullTxArr = append(fullTxArr, item)
+	}
+
+	for _, item := range flatTx(queued) {
+		fullTxArr = append(fullTxArr, item)
+	}
+
+	return fullTxArr, nil
 }
