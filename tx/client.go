@@ -227,13 +227,8 @@ func (e *Web3Client) TxPoolContentPending(ctx context.Context, filter func(toAdd
 		return pendingTxArr
 	}
 
-	for _, item := range flatTx(pending) {
-		fullTxArr = append(fullTxArr, item)
-	}
-
-	for _, item := range flatTx(queued) {
-		fullTxArr = append(fullTxArr, item)
-	}
+	fullTxArr = append(fullTxArr, flatTx(pending)...)
+	fullTxArr = append(fullTxArr, flatTx(queued)...)
 
 	return fullTxArr, nil
 }
