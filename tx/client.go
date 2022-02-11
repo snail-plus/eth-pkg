@@ -179,25 +179,26 @@ func (e *Web3Client) EthPendingFlowable(pullInterval int64) chan interface{} {
 func (e *Web3Client) SubscribePendingTransactions(ctx context.Context, ch chan *types.Transaction) (*rpc.ClientSubscription, error) {
 	hashChan := make(chan common.Hash, cap(ch))
 	subscription, err := e.gethClient.SubscribePendingTransactions(ctx, hashChan)
-	if err != nil {
-		return nil, err
-	}
 
-	for {
-		select {
-		case <-ctx.Done():
-			return nil, ctx.Err()
-		case err = <-subscription.Err():
-			return nil, err
-		case txHah := <-hashChan:
-			pendingTx, _, err := e.ethClient.TransactionByHash(ctx, txHah)
-			if err != nil {
-				continue
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				break
+			case err = <-subscription.Err():
+				break
+			case txHah := <-hashChan:
+				pendingTx, _, err := e.ethClient.TransactionByHash(ctx, txHah)
+				if err != nil {
+					continue
+				}
+
+				ch <- pendingTx
 			}
-
-			ch <- pendingTx
 		}
-	}
+	}()
+
+	return subscription, err
 
 }
 
