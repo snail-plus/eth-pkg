@@ -181,6 +181,12 @@ func (e *Web3Client) EthPendingFlowable(pullInterval int64) chan interface{} {
 	return logChan
 }
 
+func (e *Web3Client) ParityAllTransactions(ctx context.Context) ([]*RPCTransaction, error) {
+	var result []*RPCTransaction
+	err := e.rpcClient.CallContext(ctx, &result, "parity_allTransactions")
+	return result, err
+}
+
 func (e *Web3Client) SubscribePendingTransactions(ctx context.Context, ch chan *types.Transaction) (*rpc.ClientSubscription, error) {
 	hashChan := make(chan common.Hash, cap(ch))
 	subscription, err := e.gethClient.SubscribePendingTransactions(ctx, hashChan)
