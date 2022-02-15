@@ -84,6 +84,11 @@ func (e *Web3Client) TransactionByHash(ctx context.Context, hashStr string) (tx 
 	return e.ethClient.TransactionByHash(ctx, hash)
 }
 
+func (e *Web3Client) TraceTransaction(ctx context.Context, hashStr string) (result interface{}, err error) {
+	err = e.rpcClient.CallContext(ctx, &result, "debug_traceTransaction", common.HexToHash(hashStr))
+	return result, err
+}
+
 func (e *Web3Client) SignNewTx(ctx context.Context, txInfo TransactionInfo) (*types.Transaction, error) {
 	key, err := secure.StringToPrivateKey(txInfo.PrivateKeyStr)
 	if err != nil {
