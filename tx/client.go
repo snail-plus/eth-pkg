@@ -9,6 +9,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/ethclient/gethclient"
 	"github.com/ethereum/go-ethereum/rpc"
+	"github.com/snail-plus/eth-pkg/common/gopool"
 	"github.com/snail-plus/eth-pkg/secure"
 	"github.com/snail-plus/goutil/maputil"
 	"log"
@@ -203,7 +204,7 @@ func (e *Web3Client) SubscribePendingTransactions(ctx context.Context, ch chan *
 				break
 			case txHah := <-hashChan:
 
-				go func() {
+				gopool.Submit(func() {
 					pendingTx, _, err := e.ethClient.TransactionByHash(ctx, txHah)
 					if err != nil {
 						if !strings.Contains(err.Error(), "not found") {
@@ -213,7 +214,7 @@ func (e *Web3Client) SubscribePendingTransactions(ctx context.Context, ch chan *
 					}
 
 					ch <- pendingTx
-				}()
+				})
 
 			}
 		}
