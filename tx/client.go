@@ -194,7 +194,6 @@ func (e *Web3Client) SubscribePendingTransactions(ctx context.Context, ch chan *
 
 	go func() {
 		// 控制并发查询
-		var sem = make(chan int, 50)
 
 		for {
 			select {
@@ -204,13 +203,7 @@ func (e *Web3Client) SubscribePendingTransactions(ctx context.Context, ch chan *
 				break
 			case txHah := <-hashChan:
 
-				sem <- 1
-
 				go func() {
-					defer func() {
-						<-sem
-					}()
-
 					pendingTx, _, err := e.ethClient.TransactionByHash(ctx, txHah)
 					if err != nil {
 						if !strings.Contains(err.Error(), "not found") {
