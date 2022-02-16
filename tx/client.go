@@ -11,6 +11,7 @@ import (
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/snail-plus/eth-pkg/secure"
 	"github.com/snail-plus/goutil/maputil"
+	"log"
 	"math/big"
 	"strings"
 )
@@ -192,6 +193,9 @@ func (e *Web3Client) SubscribePendingTransactions(ctx context.Context, ch chan *
 	subscription, err := e.gethClient.SubscribePendingTransactions(ctx, hashChan)
 
 	go func() {
+		// 控制并发查询
+		var sem = make(chan int, 3)
+
 		for {
 			select {
 			case <-ctx.Done():
@@ -199,12 +203,23 @@ func (e *Web3Client) SubscribePendingTransactions(ctx context.Context, ch chan *
 			case err = <-subscription.Err():
 				break
 			case txHah := <-hashChan:
-				pendingTx, _, err := e.ethClient.TransactionByHash(ctx, txHah)
-				if err != nil {
-					continue
-				}
 
-				ch <- pendingTx
+				sem <- 1
+
+				go func() {
+					defer func() {
+						<-sem
+					}()
+
+					pendingTx, _, err := e.ethClient.TransactionByHash(ctx, txHah)
+					if err != nil {
+						log.Printf("TransactionByHash error: %s", err.Error())
+						return
+					}
+
+					ch <- pendingTx
+				}()
+
 			}
 		}
 	}()
