@@ -212,8 +212,10 @@ func (e *Web3Client) SubscribePendingTransactions(ctx context.Context, ch chan *
 					}()
 
 					pendingTx, _, err := e.ethClient.TransactionByHash(ctx, txHah)
-					if err != nil && strings.Contains(err.Error(), "not found") {
-						log.Printf("TransactionByHash error: %s", err.Error())
+					if err != nil {
+						if !strings.Contains(err.Error(), "not found") {
+							log.Printf("TransactionByHash error: %s", err.Error())
+						}
 						return
 					}
 
