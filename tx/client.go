@@ -203,7 +203,7 @@ func (e *Web3Client) SubscribePendingTransactions(ctx context.Context, ch chan *
 			case txHah := <-hashChan:
 
 				gopool.Submit(func() {
-					c, cancel := context.WithTimeout(ctx, 3*time.Second)
+					c, cancel := context.WithTimeout(ctx, 1*time.Second)
 					defer cancel()
 					pendingTx, _, err := e.ethClient.TransactionByHash(c, txHah)
 					if err != nil {
