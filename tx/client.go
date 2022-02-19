@@ -199,10 +199,7 @@ func (e *Web3Client) SubscribePendingTransactions(ctx context.Context, ch chan *
 
 		for {
 			select {
-			case <-ctx.Done():
-				break
-			case err = <-subscription.Err():
-				break
+
 			case txHah := <-hashChan:
 
 				gopool.Submit(func() {
@@ -218,6 +215,11 @@ func (e *Web3Client) SubscribePendingTransactions(ctx context.Context, ch chan *
 
 					ch <- pendingTx
 				})
+
+			case <-ctx.Done():
+				break
+			case err = <-subscription.Err():
+				break
 
 			}
 		}
