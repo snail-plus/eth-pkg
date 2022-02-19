@@ -15,6 +15,7 @@ import (
 	"log"
 	"math/big"
 	"strings"
+	"time"
 )
 
 type Web3Client struct {
@@ -205,7 +206,9 @@ func (e *Web3Client) SubscribePendingTransactions(ctx context.Context, ch chan *
 			case txHah := <-hashChan:
 
 				gopool.Submit(func() {
-					pendingTx, _, err := e.ethClient.TransactionByHash(ctx, txHah)
+					c, cancel := context.WithTimeout(ctx, 1*time.Second)
+					defer cancel()
+					pendingTx, _, err := e.ethClient.TransactionByHash(c, txHah)
 					if err != nil {
 						if !strings.Contains(err.Error(), "not found") {
 							log.Printf("TransactionByHash error: %s", err.Error())
