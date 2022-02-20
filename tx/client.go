@@ -203,9 +203,9 @@ func (e *Web3Client) SubscribePendingTransactions(ctx context.Context, ch chan *
 			case txHah := <-hashChan:
 
 				gopool.Submit(func() {
-					c, cancel := context.WithTimeout(ctx, 1*time.Second)
+					c, cancel := context.WithTimeout(ctx, 500*time.Millisecond)
 					defer cancel()
-					pendingTx, _, err := e.ethClient.TransactionByHash(c, txHah)
+					pendingTx, isPending, err := e.ethClient.TransactionByHash(c, txHah)
 					if err != nil {
 						if !strings.Contains(err.Error(), "not found") {
 							log.Printf("TransactionByHash error: %s", err.Error())
@@ -213,7 +213,10 @@ func (e *Web3Client) SubscribePendingTransactions(ctx context.Context, ch chan *
 						return
 					}
 
-					ch <- pendingTx
+					if isPending {
+						ch <- pendingTx
+					}
+
 				})
 
 			case <-ctx.Done():
