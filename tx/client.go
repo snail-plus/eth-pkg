@@ -273,6 +273,10 @@ func (e *Web3Client) TxPoolContentPending(ctx context.Context, filter func(toAdd
 					continue
 				}
 
+				if pendingTx.To == nil {
+					continue
+				}
+
 				if filter(strings.ToLower(pendingTx.To.String())) {
 					pendingTxArr = append(pendingTxArr, pendingTx)
 				}
