@@ -17,21 +17,47 @@ type TransactionManager interface {
 }
 
 type FastRawTransactionManager struct {
-	nonce            uint64
-	refreshNonceTime int64
-	mutex            *sync.Mutex
-	web3Client       *Web3Client
-	privateKeyStr    string
+	nonce               uint64
+	refreshNonceTime    int64
+	lastAccessNonceTime int64
+	mutex               *sync.Mutex
+	web3Client          *Web3Client
+	privateKeyStr       string
 }
 
 func NewDefaultTransactionManager(web3Client *Web3Client,
 	privateKeyStr string) TransactionManager {
-	return &FastRawTransactionManager{
+	txManager := &FastRawTransactionManager{
 		nonce:         0,
 		mutex:         new(sync.Mutex),
 		web3Client:    web3Client,
 		privateKeyStr: privateKeyStr,
 	}
+
+	timer := time.NewTicker(30 * time.Second)
+	go func() {
+		for range timer.C {
+			if time.Now().Unix()-txManager.lastAccessNonceTime < 30 {
+				continue
+			}
+
+			func() {
+				txManager.mutex.Lock()
+				defer txManager.mutex.Unlock()
+
+				addressStr, _ := secure.PrivateKeyToAddressStr(txManager.privateKeyStr)
+				nonce, err := txManager.web3Client.GetNonce(context.Background(), addressStr)
+				if err != nil {
+					return
+				}
+
+				txManager.refreshNonceTime = time.Now().Unix()
+				txManager.nonce = nonce
+			}()
+
+		}
+	}()
+	return txManager
 }
 
 func (f *FastRawTransactionManager) ExecuteTransaction(to string, data []byte, value *big.Int,
@@ -90,5 +116,6 @@ func (f *FastRawTransactionManager) GetNonce(ctx context.Context, account string
 		f.nonce = f.nonce + 1
 	}
 
+	f.lastAccessNonceTime = time.Now().Unix()
 	return f.nonce, nil
 }
