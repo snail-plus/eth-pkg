@@ -20,7 +20,7 @@ type FastRawTransactionManager struct {
 	nonce               uint64
 	refreshNonceTime    int64
 	lastAccessNonceTime int64
-	mutex               *sync.Mutex
+	mutex               *sync.RWMutex
 	web3Client          *Web3Client
 	privateKeyStr       string
 }
@@ -29,7 +29,7 @@ func NewDefaultTransactionManager(web3Client *Web3Client,
 	privateKeyStr string) TransactionManager {
 	txManager := &FastRawTransactionManager{
 		nonce:         0,
-		mutex:         new(sync.Mutex),
+		mutex:         new(sync.RWMutex),
 		web3Client:    web3Client,
 		privateKeyStr: privateKeyStr,
 	}
@@ -37,23 +37,12 @@ func NewDefaultTransactionManager(web3Client *Web3Client,
 	timer := time.NewTicker(30 * time.Second)
 	go func() {
 		for range timer.C {
+			// 30 秒内有访问则 不需要更新 自增即可
 			if time.Now().Unix()-txManager.lastAccessNonceTime < 30 {
 				continue
 			}
 
-			func() {
-				txManager.mutex.Lock()
-				defer txManager.mutex.Unlock()
-
-				addressStr, _ := secure.PrivateKeyToAddressStr(txManager.privateKeyStr)
-				nonce, err := txManager.web3Client.GetNonce(context.Background(), addressStr)
-				if err != nil {
-					return
-				}
-
-				txManager.refreshNonceTime = time.Now().Unix()
-				txManager.nonce = nonce
-			}()
+			txManager.syncNonce()
 
 		}
 	}()
@@ -105,13 +94,7 @@ func (f *FastRawTransactionManager) GetNonce(ctx context.Context, account string
 	}
 
 	if f.nonce == 0 || refresh {
-		nonce, err := f.web3Client.GetNonce(ctx, account)
-		if err != nil {
-			return 0, err
-		}
-		log.Printf("address: %s, nonce: %d", account, nonce)
-		f.nonce = nonce
-		f.refreshNonceTime = time.Now().Unix()
+		f.syncNonce()
 	} else if time.Now().Unix()-f.lastAccessNonceTime > 30 {
 		// 定时任务在没有 访问nonce 30 秒以外 会定时更新nonce 这里直接返回即可
 		return f.nonce, nil
@@ -121,4 +104,19 @@ func (f *FastRawTransactionManager) GetNonce(ctx context.Context, account string
 
 	f.lastAccessNonceTime = time.Now().Unix()
 	return f.nonce, nil
+}
+
+func (f *FastRawTransactionManager) syncNonce() error {
+	f.mutex.Lock()
+	defer f.mutex.Unlock()
+
+	addressStr, _ := secure.PrivateKeyToAddressStr(f.privateKeyStr)
+	nonce, err := f.web3Client.GetNonce(context.Background(), addressStr)
+	if err != nil {
+		return err
+	}
+	log.Printf("syncNonce, address: %s, nonce: %d", addressStr, nonce)
+	f.nonce = nonce
+	f.refreshNonceTime = time.Now().Unix()
+	return nil
 }
