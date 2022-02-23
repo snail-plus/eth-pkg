@@ -112,6 +112,9 @@ func (f *FastRawTransactionManager) GetNonce(ctx context.Context, account string
 		log.Printf("address: %s, nonce: %d", account, nonce)
 		f.nonce = nonce
 		f.refreshNonceTime = time.Now().Unix()
+	} else if time.Now().Unix()-f.lastAccessNonceTime > 30 {
+		// 定时任务在没有 访问nonce 30 秒以外 会定时更新nonce 这里直接返回即可
+		return f.nonce, nil
 	} else {
 		f.nonce = f.nonce + 1
 	}
