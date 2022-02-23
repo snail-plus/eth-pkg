@@ -42,7 +42,12 @@ func NewDefaultTransactionManager(web3Client *Web3Client,
 				continue
 			}
 
-			txManager.syncNonce()
+			func() {
+				txManager.mutex.Lock()
+				defer txManager.mutex.Unlock()
+
+				txManager.syncNonce()
+			}()
 
 		}
 	}()
@@ -106,10 +111,8 @@ func (f *FastRawTransactionManager) GetNonce(ctx context.Context, account string
 	return f.nonce, nil
 }
 
+// 外部调用加锁
 func (f *FastRawTransactionManager) syncNonce() error {
-	f.mutex.Lock()
-	defer f.mutex.Unlock()
-
 	addressStr, _ := secure.PrivateKeyToAddressStr(f.privateKeyStr)
 	nonce, err := f.web3Client.GetNonce(context.Background(), addressStr)
 	if err != nil {
