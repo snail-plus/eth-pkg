@@ -51,6 +51,8 @@ func NewDefaultTransactionManager(web3Client *Web3Client,
 
 		}
 	}()
+
+	txManager.syncNonce()
 	return txManager
 }
 
