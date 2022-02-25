@@ -33,18 +33,13 @@ func NewDefaultTransactionManager(web3Client *Web3Client,
 		privateKeyStr: privateKeyStr,
 	}
 
-	timer := time.NewTicker(30 * time.Second)
+	timer := time.NewTicker(10 * time.Second)
 	go func() {
 		for range timer.C {
 
 			func() {
 				txManager.mutex.Lock()
 				defer txManager.mutex.Unlock()
-
-				// 30 秒内有访问则 不需要更新 自增即可
-				if time.Now().Unix()-txManager.lastAccessNonceTime < 30 {
-					return
-				}
 
 				txManager.syncNonce()
 			}()
@@ -101,11 +96,9 @@ func (f *FastRawTransactionManager) GetNonce(ctx context.Context, account string
 
 	if f.nonce == 0 || refresh {
 		f.syncNonce()
-	} else if time.Now().Unix()-f.lastAccessNonceTime > 30 {
+	} else {
 		// 定时任务在没有 访问nonce 30 秒以外 会定时更新nonce 这里直接返回即可
 		return f.nonce, nil
-	} else {
-		f.nonce = f.nonce + 1
 	}
 
 	return f.nonce, nil
