@@ -94,7 +94,11 @@ func (f *FastRawTransactionManager) ExecuteTransaction(to string, data []byte, v
 
 func (f *FastRawTransactionManager) GetNonce(ctx context.Context, account string, refresh bool) (uint64, error) {
 	f.mutex.Lock()
-	defer f.mutex.Unlock()
+
+	defer func() {
+		f.lastAccessNonceTime = time.Now().Unix()
+		f.mutex.Unlock()
+	}()
 
 	// 注意 交易在交易池 中 节点nonce 不会增加(执行后记录当前nonce) 这里需要客户端自己计算 然后定时更新nonce
 	if time.Now().Unix()-f.refreshNonceTime >= 60 {
@@ -110,7 +114,6 @@ func (f *FastRawTransactionManager) GetNonce(ctx context.Context, account string
 		f.nonce = f.nonce + 1
 	}
 
-	f.lastAccessNonceTime = time.Now().Unix()
 	return f.nonce, nil
 }
 
