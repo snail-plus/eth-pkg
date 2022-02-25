@@ -13,6 +13,7 @@ type TransactionManager interface {
 	// 返回hash
 	ExecuteTransaction(to string, data []byte, value *big.Int, gasPrice *big.Int, gasLimit uint64) (string, error)
 	GetNonce(ctx context.Context, account string, refresh bool) (uint64, error)
+	GetPrivateKey() string
 }
 
 type FastRawTransactionManager struct {
@@ -118,4 +119,8 @@ func (f *FastRawTransactionManager) syncNonce() error {
 	f.nonce = nonce
 	f.refreshNonceTime = time.Now().Unix()
 	return nil
+}
+
+func (f *FastRawTransactionManager) GetPrivateKey() string {
+	return f.privateKeyStr
 }
