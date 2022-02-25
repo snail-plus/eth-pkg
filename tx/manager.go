@@ -5,7 +5,6 @@ import (
 	"github.com/snail-plus/eth-pkg/secure"
 	"log"
 	"math/big"
-	"strings"
 	"sync"
 	"time"
 )
@@ -83,11 +82,6 @@ func (f *FastRawTransactionManager) ExecuteTransaction(to string, data []byte, v
 	}
 
 	txHash, err := f.web3Client.SendTransaction(ctx, signTx)
-	if err != nil && strings.Contains(err.Error(), "nonce too") {
-		// nonce too low refresh
-		f.GetNonce(ctx, addressStr, true)
-	}
-
 	return txHash, err
 
 }
