@@ -95,7 +95,7 @@ func (f *FastRawTransactionManager) GetNonce(ctx context.Context, account string
 		refresh = true
 	}
 
-	if f.nonce == 0 || refresh {
+	if f.nonce == 0 || refresh || f.refreshNonceTime == 0 {
 		f.syncNonce()
 	} else if time.Now().Unix()-f.refreshNonceTime < 10 {
 		// 定时任务在没有 访问nonce 30 秒以外 会定时更新nonce 这里直接返回即可
