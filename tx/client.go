@@ -196,13 +196,19 @@ func (e *Web3Client) SubscribePendingTransactions(ctx context.Context, ch chan *
 
 	go func() {
 		// 控制并发查询
+		sign := make(chan int, 3)
 
 		for {
 			select {
 
 			case txHah := <-hashChan:
+				sign <- 1
 
 				gopool.Submit(func() {
+					defer func() {
+						<-sign
+					}()
+
 					c, cancel := context.WithTimeout(ctx, 2*time.Second)
 					defer cancel()
 					pendingTx, isPending, err := e.ethClient.TransactionByHash(c, txHah)
