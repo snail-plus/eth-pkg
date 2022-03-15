@@ -202,7 +202,11 @@ func (e *Web3Client) SubscribePendingTransactions(ctx context.Context, ch chan *
 			select {
 
 			case txHah := <-hashChan:
-				sign <- 1
+				select {
+				case sign <- 1:
+				case <-time.After(3 * time.Second):
+					continue
+				}
 
 				gopool.Submit(func() {
 					defer func() {
