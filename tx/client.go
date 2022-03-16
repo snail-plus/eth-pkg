@@ -196,7 +196,7 @@ func (e *Web3Client) SubscribePendingTransactions(ctx context.Context, ch chan *
 
 	go func() {
 		// 控制并发查询
-		sign := make(chan int, 3)
+		sign := make(chan int, 4)
 
 		for {
 			select {
