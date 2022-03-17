@@ -190,13 +190,13 @@ func (e *Web3Client) ParityAllTransactions(ctx context.Context) ([]*RPCTransacti
 	return result, err
 }
 
-func (e *Web3Client) SubscribePendingTransactions(ctx context.Context, ch chan *types.Transaction) (*rpc.ClientSubscription, error) {
+func (e *Web3Client) SubscribePendingTransactions(ctx context.Context, ch chan *types.Transaction, coroutines int) (*rpc.ClientSubscription, error) {
 	hashChan := make(chan common.Hash, cap(ch))
 	subscription, err := e.gethClient.SubscribePendingTransactions(ctx, hashChan)
 
 	go func() {
 		// 控制并发查询
-		sign := make(chan int, 4)
+		sign := make(chan int, coroutines)
 
 		for {
 			select {
@@ -230,10 +230,9 @@ func (e *Web3Client) SubscribePendingTransactions(ctx context.Context, ch chan *
 				})
 
 			case <-ctx.Done():
-				break
+				return
 			case err = <-subscription.Err():
-				break
-
+				return
 			}
 		}
 	}()
